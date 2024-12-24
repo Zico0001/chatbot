@@ -1,56 +1,41 @@
 import streamlit as st
-from openai import OpenAI
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+# Example Psychoeducation Modules
+psychoeducation_modules = {
+    "what_is_trauma": "Trauma is an emotional response to a distressing event. It can result from experiences such as accidents, abuse, or natural disasters. Symptoms can include flashbacks, anxiety, and emotional numbness.",
+    "coping_strategies": "Coping strategies include grounding techniques, such as focusing on your senses, deep breathing, journaling, or speaking with a trusted friend or therapist.",
+    "self_care": "Self-care involves activities like regular exercise, healthy eating, and ensuring you take time to relax. Remember, seeking help is a sign of strength.",
+}
+
+# Example Self-Care Tips
+self_care_tips = {
+    "stress": "Try deep breathing exercises or progressive muscle relaxation to alleviate stress.",
+    "anxiety": "Ground yourself by focusing on your senses: name 5 things you see, 4 things you feel, 3 things you hear, 2 things you smell, and 1 thing you taste.",
+    "general": "Engage in regular physical activity, maintain a balanced diet, and set aside time for hobbies and relaxation.",
+}
+
+# Streamlit Interface
+st.title("Trauma-Informed Chatbot")
+st.write("An interactive chatbot for learning about trauma and self-care.")
+
+# User Input
+user_input = st.text_input("Enter your question or topic:")
+if user_input:
+    # Mock response (replace with AI logic if needed)
+    response = f"Here's a response related to: {user_input}"
+    st.write(response)
+
+# Psychoeducation Modules
+st.header("Psychoeducation Modules")
+selected_module = st.selectbox(
+    "Choose a topic:", list(psychoeducation_modules.keys())
 )
+if st.button("Get Module Content"):
+    st.write(psychoeducation_modules.get(selected_module, "Module not found."))
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+# Self-Care Tips
+st.header("Self-Care Tips")
+selected_need = st.selectbox("Select a need:", list(self_care_tips.keys()))
+if st.button("Get Self-Care Tip"):
+    st.write(self_care_tips.get(selected_need, "No tips available."))
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
-
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
-
-        # Store and display the current prompt.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
